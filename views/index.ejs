@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discord Welcome/Goodbye Bot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div class="max-w-6xl mx-auto p-6">
+    <header class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-indigo-600 grid place-items-center font-bold">WB</div>
+        <h1 class="text-2xl font-bold">⚙️ Configurare Bot</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <% if (user) { %>
+          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" class="w-8 h-8 rounded-full" alt="avatar" />
+          <div class="text-sm"><strong><%= user.username %></strong></div>
+          <button id="logoutBtn" class="ml-3 inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Logout</button>
+        <% } else { %>
+          <a href="/login" class="text-sky-400 hover:underline">Login</a>
+        <% } %>
+      </div>
+    </header>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <% if (guilds.length === 0) { %>
+        <div class="col-span-2 bg-slate-900/60 border border-slate-800 rounded-xl p-6">
+          <p>Botul nu este în niciun server încă. Invită-l în serverul tău.</p>
+        </div>
+      <% } %>
+
+      <% guilds.forEach(g => { const cfg = configs[g.id] || {}; %>
+        <a href="/guild/<%= g.id %>" class="group bg-slate-900/60 border border-slate-800 rounded-xl p-6 hover:border-sky-500 transition flex items-center gap-4">
+          <% if (g.icon) { %>
+            <img src="<%= g.icon %>" alt="icon" class="w-12 h-12 rounded" />
+          <% } else { %>
+            <div class="w-12 h-12 rounded bg-slate-800 grid place-items-center">🛡️</div>
+          <% } %>
+          <div class="flex-1">
+            <div class="font-semibold"><%= g.name %></div>
+            <div class="text-slate-400 text-sm">Welcome: <%= g.welcomeChannelName || '— not set —' %> • Goodbye: <%= g.goodbyeChannelName || '— not set —' %></div>
+          </div>
+          <div class="text-sky-400">Config →</div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+  <!-- Logout confirmation modal -->
+  <div id="logoutModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div id="logoutBox" class="bg-slate-900 rounded-lg p-6 w-80 transform scale-75 opacity-0 transition-all duration-300">
+      <div class="text-lg font-semibold mb-2">Confirmare logout</div>
+      <p class="text-sm text-slate-400 mb-4">Ești sigur că vrei să te deloghezi?</p>
+      <div class="flex justify-end gap-2">
+        <button id="cancelLogout" class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200">Anulează</button>
+        <form id="logoutForm" action="/logout" method="get" class="m-0">
+          <button type="submit" class="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white">Deloghează</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Logout modal animation
+    const logoutBtn = document.getElementById('logoutBtn');
+    const logoutModal = document.getElementById('logoutModal');
+    const logoutBox = document.getElementById('logoutBox');
+    const cancelLogout = document.getElementById('cancelLogout');
+    function openModal(){
+      logoutModal.classList.remove('hidden');
+      // small delay to trigger transition
+      requestAnimationFrame(()=>{
+        logoutBox.classList.remove('scale-75','opacity-0');
+      });
+    }
+    function closeModal(){
+      logoutBox.classList.add('scale-75','opacity-0');
+      setTimeout(()=> logoutModal.classList.add('hidden'), 220);
+    }
+    logoutBtn?.addEventListener('click', openModal);
+    cancelLogout?.addEventListener('click', (e)=>{ e.preventDefault(); closeModal(); });
+    // close when clicking outside box
+    logoutModal?.addEventListener('click', (e)=>{ if (e.target === logoutModal) closeModal(); });
+  </script>
+</body>
+</html>

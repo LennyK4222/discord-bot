@@ -1,0 +1,38 @@
+{
+  "920914103638315048": {
+    "bannerFile": "920914103638315048.gif",
+    "welcomeChannelId": "920921110164430878",
+    "goodbyeChannelId": "920921110164430878",
+    "welcomeMessage": "Bine ai venit, {user}!",
+    "goodbyeMessage": "La revedere, {user}!",
+    "bannerUrl": "",
+    "layout": {
+      "avatar": {
+        "size": 281,
+        "x": 53,
+        "y": 59
+      },
+      "title": {
+        "size": 113,
+        "y": 168,
+        "x": 450,
+        "center": false,
+        "color": "#00ff40",
+        "strokeColor": "#000000",
+        "strokeWidth": 3
+      },
+      "subtitle": {
+        "size": 111,
+        "y": 295,
+        "x": 573,
+        "center": false,
+        "color": "#ffd166",
+        "strokeColor": "#000000",
+        "strokeWidth": 2
+      },
+      "overlayOpacity": 0.16
+    },
+    "allowedRoleIds": [],
+    "autoRoleId": "921083955518775348"
+  }
+}

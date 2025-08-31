@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-900 text-slate-100 flex items-center justify-center min-h-screen">
+    <div class="bg-slate-800 p-8 rounded shadow-lg w-96 text-center">
+      <div class="flex items-center justify-center mb-4">
+        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center text-white font-bold">WB</div>
+      </div>
+      <h1 class="text-2xl font-semibold mb-4">Dashboard • Welcome Banners</h1>
+      <% if (user) { %>
+        <div class="mb-3">
+          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" class="w-16 h-16 rounded-full mx-auto mb-2" alt="avatar" />
+          <p class="text-sm">Conectat ca <strong><%= user.username %>#<%= user.discriminator %></strong></p>
+        </div>
+        <div class="flex gap-3 justify-center mt-4">
+          <a href="/" class="bg-sky-500 px-4 py-2 rounded text-white">Mergi la dashboard</a>
+          <a href="/logout" class="bg-red-600 px-4 py-2 rounded text-white">Logout</a>
+        </div>
+      <% } else { %>
+        <a href="/auth/discord" class="inline-block bg-indigo-600 px-4 py-2 rounded text-white">Login cu Discord</a>
+        <p class="text-xs text-slate-400 mt-3">Trebuie să autorizezi aplicația pentru a configura bannere.</p>
+      <% } %>
+    </div>
+  </body>
+  </html>

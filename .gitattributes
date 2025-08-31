@@ -1,0 +1,26 @@
+# Auto-detect text files and normalize line endings in the repository
+* text=auto
+
+# Explicitly enforce LF in the repository for common text files
+*.js    text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.ejs   text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.sh    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.env   text eol=lf
+*.txt   text eol=lf
+
+# Treat common binary formats as binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+
+# Prevent accidental normalization of lockfiles that may be platform specific
+package-lock.json text eol=lf

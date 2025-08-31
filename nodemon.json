@@ -1,0 +1,8 @@
+{
+  "watch": ["src"],
+  "ext": "js,mjs",
+  "ignore": [
+    "data/config.json",
+    "data/banners/*"
+  ]
+}

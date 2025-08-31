@@ -1,0 +1,35 @@
+{
+  "name": "discord-welcome-goodbye-bot",
+  "version": "1.0.0",
+  "description": "Discord bot cu welcome/goodbye si UI modern pentru configurare",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "compression": "^1.8.1",
+    "connect-redis": "^9.0.0",
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.0.1",
+    "express-session": "^1.18.2",
+    "ffmpeg": "^0.0.4",
+    "fluent-ffmpeg": "^2.1.3",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.7.0",
+    "multer": "^1.4.5-lts.1",
+    "passport": "^0.7.0",
+    "passport-discord": "^0.1.4",
+    "sharp": "^0.33.3"
+  },
+  "devDependencies": {
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "ffmpeg-static": "^5.2.0",
+    "nodemon": "^3.1.10"
+  }
+}
