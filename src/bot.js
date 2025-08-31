@@ -1,4 +1,5 @@
 import { Client, GatewayIntentBits, EmbedBuilder, Partials, PermissionsBitField } from 'discord.js';
+import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getGuildConfig } from './configStore.js';
@@ -57,9 +58,18 @@ export async function startBot() {
     }
   }
 
-  // Listen for both names to be compatible with discord.js v14/v15 changes.
-  client.once('ready', onClientReady);
-  client.once('clientReady', onClientReady);
+  // Choose the correct startup event based on the installed discord.js version
+  try {
+    const require = createRequire(import.meta.url);
+    const djPkg = require('discord.js/package.json');
+    const major = Number((djPkg.version || '0').split('.')[0]);
+    const eventName = major >= 15 ? 'clientReady' : 'ready';
+    client.once(eventName, onClientReady);
+  } catch (e) {
+    // Fallback: listen to both if we can't determine version
+    client.once('ready', onClientReady);
+    client.once('clientReady', onClientReady);
+  }
 
   // Resolve banners directory for local attachments
   const __filename = fileURLToPath(import.meta.url);
