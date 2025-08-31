@@ -18,12 +18,12 @@ export async function startBot() {
     partials: [Partials.GuildMember, Partials.User]
   });
 
-  client.once('clientReady', () => {
+  client.once('ready', () => {
     console.log(`Bot conectat ca ${client.user.tag}`);
   });
 
   // Register a simple guild-scoped /test command on clientReady
-  client.once('clientReady', async () => {
+  client.once('ready', async () => {
     try {
       const commandData = {
         name: 'test',
