@@ -20,6 +20,15 @@ export async function startServer({ bot }) {
   const app = express();
   const port = process.env.PORT || 3000;
 
+  // When running behind a proxy (like Render, Heroku, etc.) the app receives
+  // the client's IP in the X-Forwarded-For header. express-rate-limit validates
+  // this header only if `trust proxy` is enabled. Enable it in production-like
+  // environments. You can override via TRUST_PROXY env var (true/false).
+  const trustProxyEnv = (process.env.TRUST_PROXY || '').toLowerCase();
+  if (trustProxyEnv === 'true' || (trustProxyEnv === '' && process.env.NODE_ENV === 'production')) {
+    app.set('trust proxy', true);
+  }
+
   // Basic security headers. Disable helmet's default CSP so we don't block CDN-loaded assets
   // (Tailwind CDN, fonts, etc.). For production, replace this with a proper CSP.
   app.use(helmet({ contentSecurityPolicy: false }));
