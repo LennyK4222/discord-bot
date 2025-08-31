@@ -18,12 +18,15 @@ export async function startBot() {
     partials: [Partials.GuildMember, Partials.User]
   });
 
-  client.once('ready', () => {
+  // Guarded ready handler to support multiple discord.js versions
+  let readyHandled = false;
+  async function onClientReady() {
+    if (readyHandled) return;
+    readyHandled = true;
     console.log(`Bot conectat ca ${client.user.tag}`);
-  });
 
-  // Register a simple guild-scoped /test command on clientReady
-  client.once('ready', async () => {
+    // Register a simple guild-scoped /test command on startup.
+    // We'll use bulk set if available for clarity; otherwise fall back to create.
     try {
       const commandData = {
         name: 'test',
@@ -33,18 +36,30 @@ export async function startBot() {
           { name: 'type', type: 3, description: 'welcome sau goodbye', required: false, choices: [{ name: 'welcome', value: 'welcome' }, { name: 'goodbye', value: 'goodbye' }] }
         ]
       };
+
+      let registered = 0;
       for (const [, guild] of client.guilds.cache) {
         try {
-          await guild.commands.create(commandData);
+          // Some discord.js versions expose `commands.set` to bulk overwrite guild commands.
+          if (guild.commands && typeof guild.commands.set === 'function') {
+            await guild.commands.set([commandData]);
+          } else {
+            await guild.commands.create(commandData);
+          }
+          registered++;
         } catch (e) {
           console.warn('Could not register command for guild', guild.id, e?.message || e);
         }
       }
-      console.log('Slash commands (guild) registration attempted');
+      console.log(`Slash commands (guild) registration attempted; registered in ${registered} guild(s)`);
     } catch (e) {
       console.error('Error registering commands', e);
     }
-  });
+  }
+
+  // Listen for both names to be compatible with discord.js v14/v15 changes.
+  client.once('ready', onClientReady);
+  client.once('clientReady', onClientReady);
 
   // Resolve banners directory for local attachments
   const __filename = fileURLToPath(import.meta.url);
