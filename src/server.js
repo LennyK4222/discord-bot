@@ -24,9 +24,21 @@ export async function startServer({ bot }) {
   // the client's IP in the X-Forwarded-For header. express-rate-limit validates
   // this header only if `trust proxy` is enabled. Enable it in production-like
   // environments. You can override via TRUST_PROXY env var (true/false).
-  const trustProxyEnv = (process.env.TRUST_PROXY || '').toLowerCase();
-  if (trustProxyEnv === 'true' || (trustProxyEnv === '' && process.env.NODE_ENV === 'production')) {
-    app.set('trust proxy', true);
+  const trustProxyEnvRaw = process.env.TRUST_PROXY || '';
+  const trustProxyEnv = trustProxyEnvRaw.toLowerCase();
+  // Prefer a numeric value (number of proxies) to avoid permissive `trust proxy`.
+  // express-rate-limit rejects a permissive true value. Use TRUST_PROXY=1 on PaaS
+  // like Render where there is a single proxy in front of the app, or set a
+  // specific IP/networks if needed.
+  if (trustProxyEnv && !isNaN(Number(trustProxyEnvRaw))) {
+    app.set('trust proxy', Number(trustProxyEnvRaw));
+  } else if (trustProxyEnv === 'true') {
+    // If explicitly true is provided, fall back to trusting only one proxy to
+    // reduce permissiveness.
+    app.set('trust proxy', 1);
+  } else if (trustProxyEnv === '' && process.env.NODE_ENV === 'production') {
+    // Default to trusting a single proxy in production environments like Render.
+    app.set('trust proxy', 1);
   }
 
   // Basic security headers. Disable helmet's default CSP so we don't block CDN-loaded assets
