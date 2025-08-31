@@ -30,7 +30,8 @@ export async function setupAuth(app) {
       sessionOptions.store = new RedisStore({ client });
       console.log('Auth: using Redis session store');
     } catch (e) {
-      console.warn('Auth: REDIS_URL set but redis packages missing or failed to initialize; falling back to memory store');
+  console.warn('Auth: REDIS_URL set but redis packages missing or failed to initialize; falling back to memory store');
+  console.error('Auth: redis init error:', e && (e.stack || e.message || e));
     }
   }
 
