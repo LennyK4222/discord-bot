@@ -25,13 +25,53 @@ export async function setupAuth(app) {
     try {
       const connectRedis = require('connect-redis');
       const IORedis = require('ioredis');
-      const RedisStore = connectRedis(session);
+
+      // Create Redis client (ioredis)
       const client = new IORedis(process.env.REDIS_URL);
-      sessionOptions.store = new RedisStore({ client });
+
+      // connect-redis has changed export shapes across versions. Try multiple ways to
+      // construct a store so this code works with v3/v4/v5/v6 variants.
+      let initialized = false;
+      let lastError = null;
+
+      try {
+        // old style: connectRedis(session) -> Store constructor
+        if (typeof connectRedis === 'function') {
+          const StoreCtor = connectRedis(session);
+          sessionOptions.store = new StoreCtor({ client });
+          initialized = true;
+        }
+      } catch (e) { lastError = e; }
+
+      if (!initialized && connectRedis && typeof connectRedis.default === 'function') {
+        try {
+          const StoreCtor = connectRedis.default(session);
+          sessionOptions.store = new StoreCtor({ client });
+          initialized = true;
+        } catch (e) { lastError = e; }
+      }
+
+      if (!initialized && connectRedis && connectRedis.RedisStore) {
+        try {
+          const StoreCtor = connectRedis.RedisStore;
+          sessionOptions.store = new StoreCtor({ client });
+          initialized = true;
+        } catch (e) { lastError = e; }
+      }
+
+      if (!initialized) {
+        // As a last resort, try treating the module itself as a constructor
+        try {
+          sessionOptions.store = new connectRedis({ client });
+          initialized = true;
+        } catch (e) { lastError = e; }
+      }
+
+      if (!initialized) throw lastError || new Error('Could not initialize Redis store (unknown connect-redis shape)');
       console.log('Auth: using Redis session store');
     } catch (e) {
-  console.warn('Auth: REDIS_URL set but redis packages missing or failed to initialize; falling back to memory store');
-  console.error('Auth: redis init error:', e && (e.stack || e.message || e));
+      console.warn('Auth: REDIS_URL set but redis packages missing or failed to initialize; falling back to memory store');
+      console.error('Auth: redis init error:', e && (e.stack || e.message || e));
     }
   }
 
