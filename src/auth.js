@@ -28,6 +28,11 @@ export async function setupAuth(app) {
 
       // Create Redis client (ioredis)
       const client = new IORedis(process.env.REDIS_URL);
+      // Prevent unhandled error events from terminating the process; log them and
+      // allow the app to continue (session store will attempt reconnects).
+      client.on('error', (err) => {
+        console.error('Auth: ioredis error:', err && (err.stack || err.message || err));
+      });
 
       // connect-redis has changed export shapes across versions. Try multiple ways to
       // construct a store so this code works with v3/v4/v5/v6 variants.
