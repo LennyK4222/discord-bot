@@ -1,48 +1,80 @@
-# Discord Welcome/Goodbye Bot cu UI modern
+# Discord Welcome/Goodbye Bot cu UI
 
-Un bot Discord (discord.js v14) cu mesaje de welcome/goodbye și UI web modern (Express + EJS + Tailwind via CDN) pentru configurare. Banner-ul din mesaje poate fi un GIF animat (URL).
+Un bot Discord (discord.js v14) care trimite bannere de welcome/goodbye și oferă o interfață web pentru configurare (Express + EJS). Proiectul poate compune bannere statice (PNG) sau animate (GIF) și permite încărcări de imagini, role-based access și auto-role la join.
+
+## Caracteristici
+- Mesaje de welcome și goodbye personalizabile (placeholder `{user}`).
+- Compoziție banner: suport pentru GIF animat (ffmpeg + palette) și overlay PNG (folosit pentru text/avatar).
+- Interfață web pentru administrare per-server.
+- Autentificare Discord (OAuth) pentru dashboard.
+- Assign automat de rol la join (auto-role) configurabil.
 
 ## Cerințe
-- Node.js 18+
-- Token de bot Discord (și activat intentul Server Members)
+- Node.js 18+ (recomandat LTS)
+- FFmpeg instalat în PATH (necesar pentru compunerea GIF-urilor)
+- Un bot Discord cu token și intents setate
 
-## Instalare
-1. Clonează/Descarcă proiectul
-2. Copiază `.env.example` în `.env` și setează `DISCORD_TOKEN`
-3. Instalează dependențe:
+## Variabile de mediu
+După clonare, copiezi `.env.example` în `.env` și completezi valorile necesare:
 
-```bash
+- `DISCORD_TOKEN` — token-ul bot-ului
+- `SESSION_SECRET` — secret pentru sesiuni Express
+- `CLIENT_ID`, `CLIENT_SECRET`, `CALLBACK_URL` — (opțional) pentru OAuth dashboard
+
+## Instalare & rulare
+Instalează dependențele și rulează în modul dezvoltare:
+
+```powershell
 npm install
-```
-
-4. Rulează în dev:
-```bash
 npm run dev
 ```
-Sau producție:
-```bash
+
+Pentru producție:
+
+```powershell
+npm ci
 npm start
 ```
 
-UI-ul pornește pe `http://localhost:3000`
+Implicit, UI este disponibil la: `http://localhost:3000` (verifică `nodemon.json` / scripturi dacă portul diferă).
 
-## Permisiuni / Intents
-- În [Discord Developer Portal](https://discord.com/developers/applications) → Bot → Privileged Gateway Intents → bifează "Server Members Intent".
-- Invită botul în server cu permisiuni de a citi/scrie în canalele dorite.
+## Configurare Discord
+1. În Discord Developer Portal, bifează `Server Members Intent` la Bot → Privileged Gateway Intents.
+2. Invită botul în server cu permisiunile necesare (trimite mesaje, atașează fișiere, Manage Roles dacă folosești auto-role).
 
-## Configurare
-- Deschide `http://localhost:3000` pentru a vedea serverele unde este botul.
-- Pentru fiecare server:
-  - setează `welcomeChannelId` (obligatoriu pentru mesaje de welcome)
-  - `goodbyeChannelId` (opțional; dacă lipsește, se va folosi channel-ul de welcome)
-  - `welcomeMessage` și `goodbyeMessage` (suportă placeholder `{user}`)
-  - `bannerUrl` – link către un GIF animat (ex: `https://media.giphy.com/media/.../giphy.gif`)
+## Folosire UI
+- Accesează `http://localhost:3000` și autentifică-te cu Discord (dacă OAuth este configurat).
+- Alege serverul și configurează:
+  - canalul de welcome/goodbye
+  - mesajele (folosește `{user}` pentru mențiune)
+  - allowed roles (care pot accesa dashboard)
+  - `autoRoleId` (rol care se aplică automat la join)
+  - poți încărca bannere locale (upload) sau folosi `bannerUrl`
 
-## Format mesaje
-- Welcome: "Bine ai venit, {user}!" → înlocuiește `{user}` cu mențiune (@)
-- Goodbye: "La revedere, {user}!" → înlocuiește `{user}` cu nume/tag
+## Endpoints utile
+- `/guild/:id` — pagina de configurare pentru server
+- `/guild/:id/test` — trigger pentru a trimite un banner de test (admin-only)
+- `/api/preview/:id` — generează preview PNG/GIF
+- `/api/overlay/:id` — generează overlay PNG (folosit și pentru preview)
 
-## Note
-- Fișierul de configurare este `data/config.json`.
-- Dacă nu vezi serverele în UI, asigură-te că botul e online și invitat.
-- Pentru a obține Channel ID, activează "Developer Mode" în Discord, click dreapta pe canal → Copy ID.
+## Observații tehnice
+- Pentru GIF-uri animate serverul folosește FFmpeg (palettegen/paletteuse). Asigură-te că `ffmpeg` este pe `PATH`.
+- Textul și avatarul sunt randate într-un overlay PNG pentru stabilitate (evită problemele cu drawtext în ffmpeg pe Windows).
+- Dacă folosești auto-role, bot-ul trebuie să aibă permisiunea `Manage Roles` și rolul bot-ului trebuie să fie peste rolul configurat în ordinea rolurilor Discord.
+
+## Depanare rapidă
+- Văd erori legate de font sau ffmpeg — verifică că `ffmpeg` este instalat și funcțional:
+
+```powershell
+ffmpeg -version
+```
+
+- Nu apar serverele în dashboard — asigură-te că botul este online și că aplicația OAuth are scope-urile corecte (bot + identify + guilds).
+
+## Contribuire & licență
+- Modificări: deschide PR-uri sau issues în repository-ul de pe GitHub.
+- Adaugă un fișier `LICENSE` dacă vrei să publici codul cu o licență clară.
+
+---
+
+Dacă vrei, mai adaug un exemplu de `.env` complet, un workflow GitHub Actions simplu sau un fișier `docker-compose` pentru rulare în container; spune-mi ce preferi.
