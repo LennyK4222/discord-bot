@@ -9,11 +9,14 @@ import ffmpegModule from 'fluent-ffmpeg';
 
 const exec = promisify(child_process.exec);
 
-const CANVAS_WIDTH = 1200;
-const CANVAS_HEIGHT = 400;
-const DEFAULT_AVATAR_SIZE = 190;
-const DEFAULT_FPS = 15;
-const DEFAULT_OVERLAY_OPACITY = 0.2;
+// Performance-tunable canvas and ffmpeg settings. Override via env vars if needed.
+const CANVAS_WIDTH = Number(process.env.ANIM_MAX_WIDTH) || 1200;
+const CANVAS_HEIGHT = Number(process.env.ANIM_MAX_HEIGHT) || 400;
+const DEFAULT_AVATAR_SIZE = Number(process.env.ANIM_AVATAR_SIZE) || 190;
+const DEFAULT_FPS = Number(process.env.ANIM_FPS) || 12; // lower FPS -> faster composition
+const DEFAULT_OVERLAY_OPACITY = Number(process.env.ANIM_OVERLAY_OPACITY) || 0.2;
+const FFMPEG_THREADS = process.env.ANIM_FFMPEG_THREADS || '0'; // ffmpeg threads (0 = auto)
+const PALETTE_STATS_MODE = process.env.ANIM_PALETTE_STATS || 'diff';
 
 const FONT_REGULAR_WIN = 'C:/Windows/Fonts/segoeui.ttf';
 const FONT_BOLD_WIN = 'C:/Windows/Fonts/segoeuib.ttf';
@@ -111,6 +114,7 @@ function buildFfmpegFiltersArray(bgPath, avatarPng, layout, titleText, subtitleT
   const filters = [];
 
   filters.push({ filter: 'fps', options: { fps: DEFAULT_FPS }, inputs: '0:v', outputs: 'fps0' });
+  // Scale the background to the configured canvas size (keeps processing cost bounded)
   filters.push({ filter: 'scale', options: { w: CANVAS_WIDTH, h: CANVAS_HEIGHT, flags: 'lanczos' }, inputs: 'fps0', outputs: 'sc0' });
   filters.push({ filter: 'format', options: 'rgba', inputs: 'sc0', outputs: 'bg' });
 
@@ -170,7 +174,9 @@ function buildFfmpegFiltersArray(bgPath, avatarPng, layout, titleText, subtitleT
   }
 
   filters.push({ filter: 'split', inputs: 'pre', outputs: ['pout', 'palin'] });
-  filters.push({ filter: 'palettegen', options: { stats_mode: 'full' }, inputs: 'palin', outputs: 'pal' });
+  // Use a faster palette generation mode; configurable via ANIM_PALETTE_STATS
+  filters.push({ filter: 'palettegen', options: { stats_mode: PALETTE_STATS_MODE }, inputs: 'palin', outputs: 'pal' });
+  // paletteuse: keep diff_mode rectangle for quality/speed tradeoff
   filters.push({ filter: 'paletteuse', options: { new: 1, diff_mode: 'rectangle' }, inputs: ['pout', 'pal'], outputs: 'outv' });
 
   return filters;
@@ -198,12 +204,15 @@ export async function composeAnimatedBanner({ backgroundFilePath, backgroundUrl,
 
   return await new Promise((resolve, reject) => {
     try {
-      let cmd = ffmpegModule(bgPath).input(avatarPng);
+  let cmd = ffmpegModule(bgPath).input(avatarPng);
 
-      cmd = cmd.complexFilter(filterArr);
-      cmd.on('start', (cmdline) => console.log('FFmpeg command:', cmdline));
+  cmd = cmd.complexFilter(filterArr);
+  cmd.on('start', (cmdline) => console.log('FFmpeg command:', cmdline));
 
-      cmd.outputOptions(['-y', '-loop', '0', '-f', 'gif', '-map', '[outv]'])
+  // Tune ffmpeg threads to improve CPU utilization; configurable via ANIM_FFMPEG_THREADS
+  const outputOpts = ['-y', '-loop', '0', '-f', 'gif', '-map', '[outv]', '-threads', String(FFMPEG_THREADS)];
+
+  cmd.outputOptions(outputOpts)
         .output(outPath)
         .on('stderr', (line) => { try { console.log('[ffmpeg]', line.toString()); } catch {} })
         .on('end', () => {
