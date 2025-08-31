@@ -20,8 +20,26 @@ export async function setupAuth(app) {
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     }
   };
-
-  if (process.env.REDIS_URL) {
+  // Prefer MongoDB (if provided), then Redis; fall back to memory store only for dev.
+  if (process.env.MONGO_URL) {
+    try {
+      const MongoStore = require('connect-mongo');
+      // connect-mongo v4 exports a create method
+      if (MongoStore && typeof MongoStore.create === 'function') {
+        sessionOptions.store = MongoStore.create({ mongoUrl: process.env.MONGO_URL });
+      } else if (MongoStore && MongoStore.default && typeof MongoStore.default.create === 'function') {
+        sessionOptions.store = MongoStore.default.create({ mongoUrl: process.env.MONGO_URL });
+      } else {
+        // fallback older API
+        const StoreCtor = MongoStore(session);
+        sessionOptions.store = new StoreCtor({ url: process.env.MONGO_URL });
+      }
+      console.log('Auth: using MongoDB session store');
+    } catch (e) {
+      console.warn('Auth: MONGO_URL set but connect-mongo failed to initialize; falling back');
+      console.error('Auth: mongo init error:', e && (e.stack || e.message || e));
+    }
+  } else if (process.env.REDIS_URL) {
     try {
       const connectRedis = require('connect-redis');
       const IORedis = require('ioredis');
